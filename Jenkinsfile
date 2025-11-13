@@ -1,5 +1,4 @@
 pipeline {
-pipeline {
     agent none
     stages {
         stage('Build') {
@@ -26,6 +25,22 @@ pipeline {
             post {
                 always {
                     junit "test-reports/results.xml"
+                }
+            }
+        }
+        stage('Deliver') {
+            agent any
+            environment {
+                IMAGE = 'cdrx/pyinstaller-linux'
+            }
+            steps {
+                unstash 'compiled-results'
+                sh "docker run --rm -v ${env.WORKSPACE}/sources:/src ${IMAGE} pyinstaller -F prog.py"
+            }
+            post {
+                success {
+                    archiveArtifacts "sources/dist/prog"
+                    sh "rm -rf sources/build sources/dist"
                 }
             }
         }
