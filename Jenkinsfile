@@ -1,4 +1,5 @@
 pipeline {
+pipeline {
     agent none
     stages {
         stage('Build') {
@@ -12,5 +13,22 @@ pipeline {
                 stash(name: 'compiled-results', includes: 'sources/*.py*')
             }
         }
+        stage('Test') {
+            agent {
+                docker {
+                    image 'grihabor/pytest'
+                }
+            }
+            steps {
+                unstash 'compiled-results'
+                sh 'pytest -v --junit-xml test-reports/results.xml sources/test_calc.py'
+            }
+            post {
+                always {
+                    junit "test-reports/results.xml"
+                }
+            }
+        }
     }
 }
+
